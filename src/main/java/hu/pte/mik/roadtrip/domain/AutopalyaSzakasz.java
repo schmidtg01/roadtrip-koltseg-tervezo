@@ -1,6 +1,7 @@
 package hu.pte.mik.roadtrip.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Objects;
@@ -61,6 +62,7 @@ public class AutopalyaSzakasz extends UtvonalSzakasz {
     }
 
     @Override
+    @JsonIgnore
     public String getSzakaszTipus() {
         return "Autópálya";
     }
