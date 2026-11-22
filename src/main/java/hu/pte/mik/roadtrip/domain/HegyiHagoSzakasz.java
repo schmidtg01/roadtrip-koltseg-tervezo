@@ -85,6 +85,7 @@ public class HegyiHagoSzakasz extends UtvonalSzakasz {
     }
 
     @Override
+    @JsonIgnore
     public String getSzakaszTipus() {
         return "Hegyi hágó";
     }
