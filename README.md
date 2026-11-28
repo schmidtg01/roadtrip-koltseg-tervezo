@@ -56,7 +56,7 @@ mvn clean package
 java -jar target/roadtrip-planner-1.0.0-SNAPSHOT.jar
 ```
 
-> **Megjegyzés:** A `maven-jar-plugin` beállítja a `Main-Class: hu.pte.mik.roadtrip.Main` bejegyzést a manifestben. Mivel a `jackson-databind` külső Maven függőség, az alkalmazás teljes funkcionalitású (JSON mentéssel/betöltéssel együtt működő) indításához a `mvn exec:java` parancs használata ajánlott, amely automatikusan összeállítja a teljes futásidejű classpath-t.
+> **Megjegyzés:** A `maven-shade-plugin` az összes szükséges futásidejű függőséget (beleértve a Jacksont) és a `Main-Class: hu.pte.mik.roadtrip.Main` bejegyzést is becsomagolja a `target/roadtrip-planner-1.0.0-SNAPSHOT.jar` állományba, így a `java -jar` és a `mvn exec:java` parancs egyaránt közvetlenül futtatható.
 
 ### Projektstruktúra és értékelési segédlet
 ```text
