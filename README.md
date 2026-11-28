@@ -10,7 +10,7 @@ Magyar nyelvű, Java 21 és Apache Maven alapú konzolos alkalmazás több szaka
 Az alkalmazás **baráti társaságok, családok és közös autós túrákat szervező utazók** számára készült, akik egy több eltérő úttípusból álló kirándulás előtt szeretnék előre megbecsülni a várható utazási költségeket és menetidőt, majd a végösszeget igazságosan szétosztani a résztvevők között.
 
 ### A megoldott probléma
-Egy hosszabb autós út ritkán homogén: az autópályán a nagyobb tempó miatt megnő a fogyasztás és matricadíj merül fel, a hegyi hágókon a szintemelkedés növeli a fogyasztást és a hajtűkanyarok csökkentik az átlagsebességet, míg városi szakaszokon a forgalmi dugók lassítják a haladást és parkolási díjakkal is számolni kell. Emellett gyakori, hogy nem minden utas utazik végig a teljes útvonalon, így az elszámolás módja (egyenlő megosztás vagy megtett kilométer szerinti arányosítás) túránként változhat.
+Egy hosszabb autós út ritkán homogén: az autópályán a nagyobb tempó miatt megnő a fogyasztás és matricadíj merül fel, a hegyi hágókon a szintemelkedés növeli a fogyasztást és a hajtűkanyarok csökkentik az átlagsebességet, a városi szakaszokon a forgalmi dugók lassítják a haladást és parkolási díjakkal is számolni kell, míg normál országúton díjmentesen, a forgalmi viszonyoktól függő fogyasztással haladunk. Emellett gyakori, hogy nem minden utas utazik végig a teljes útvonalon, így az elszámolás módja (egyenlő megosztás vagy megtett kilométer szerinti arányosítás) túránként változhat.
 
 Az **Autós Túra- és Költségmegosztó Tervező** ezeket a szabályokat egységes, objektumorientált modellben kezeli, megőrzi a túraterveket JSON formátumban, és interaktív konzolos felületen teszi lehetővé a túrák tervezését és összehasonlítását.
 
@@ -61,28 +61,29 @@ java -jar target/roadtrip-planner-1.0.0-SNAPSHOT.jar
 ### Projektstruktúra és értékelési segédlet
 ```text
 ├── docs/
-│   └── uml-diagram.md              # UML osztálydiagram (Mermaid) és felhasználói történetek (US-01 – US-06)
+│   ├── uml-diagram.md              # UML osztálydiagram (Mermaid) és felhasználói történetek (US-01 – US-07)
+│   └── uml-diagram.puml            # Szerkeszthető PlantUML osztálydiagram forrásfájl
 ├── src/
 │   ├── main/java/hu/pte/mik/roadtrip/
 │   │   ├── Main.java               # Alkalmazás belépési pont
-│   │   ├── domain/                 # TuraTerv, Utas, UtvonalSzakasz + 3 polimorf leszármazott
+│   │   ├── domain/                 # TuraTerv, Utas, UtvonalSzakasz + 4 polimorf leszármazott
 │   │   ├── exception/              # ErvenytelenAdatException, TulTerheltJarmuException, AdatMentesException
 │   │   ├── persistence/            # JsonTuraTarolo (Jackson + try-with-resources)
 │   │   ├── service/                # Strategy interfész, stratégiák, TuraKezeloService
-│   │   └── ui/                     # KonzolMenu (UTF-8 Scanner alapú magyar konzolos UI)
+│   │   └── ui/                     # KonzolMenu (UTF-8 Scanner alapú 8 pontos magyar konzolos UI)
 │   └── test/java/hu/pte/mik/roadtrip/
 │       ├── domain/                 # UtvonalSzakaszTest, TuraTervTest
 │       ├── persistence/            # JsonTuraTaroloTest (@TempDir)
 │       └── service/                # KoltsegOsztasiStrategiaTest
 ├── LICENSE                         # MIT licenc
-├── pom.xml                         # Maven 21 build, Jackson, JUnit 5, exec-maven-plugin, maven-jar-plugin
+├── pom.xml                         # Maven 21 build, Jackson, JUnit 5, exec-maven-plugin, maven-shade-plugin
 └── README.md
 ```
 
 **Gyors kiértékelési lépések oktatók számára:**
-1. Futtassa a `mvn clean test` parancsot (15 JUnit 5 teszt ellenőrzi a polimorfizmust, a kivételkezelést, a Strategy mintát és a JSON perzisztenciát).
-2. Indítsa el az alkalmazást a `mvn exec:java` paranccsal: ha még nem létezik `turak.json`, a program automatikusan betölt egy **Erdélyi körút** mintatúrát mindhárom szakasztípussal és 3 utassal.
-3. Próbálja ki a `2`-es menüpontban a szakaszok rendezését (távolság / költség / menetidő), a `4`-es menüpontban a férőhely-ellenőrzést, az `5`-ös menüpontban a költségmegosztási stratégia futásidejű váltását, majd a `6`-os menüponttal mentse el az adatokat a `turak.json` fájlba és indítsa újra a programot az adatmegőrzés ellenőrzéséhez.
+1. Futtassa a `mvn clean test` parancsot (16 JUnit 5 teszt ellenőrzi a 4 szakasztípus polimorfizmusát, a kivételkezelést, a Strategy mintát és a JSON perzisztenciát).
+2. Indítsa el az alkalmazást a `mvn exec:java` (vagy `mvn clean package && java -jar target/roadtrip-planner-1.0.0-SNAPSHOT.jar`) paranccsal: ha még nem létezik `turak.json`, a program automatikusan betölt egy **Erdélyi körút** mintatúrát 3 utassal.
+3. Próbálja ki a `2`-es menüpontban a szakaszok rendezését (távolság / költség / menetidő), a `3`-as menüpontban az új normál országúti szakasz felvételét és az utas-kilométerek opcionális frissítését, a `4`-es menüpontban a férőhely-ellenőrzést, az `5`-ös és `6`-os menüpontban a stratégiaváltást és a részletes költségösszesítőt, a `7`-esben a szakasz/utas eltávolítását, majd a `8`-as menüponttal mentse el az adatokat a `turak.json` fájlba és indítsa újra a programot az adatmegőrzés ellenőrzéséhez.
 
 ---
 
@@ -105,8 +106,10 @@ Aktív költségosztási stratégia: Egyenlő elosztás
 3) Útvonalszakasz hozzáadása az aktív túrához
 4) Utas hozzáadása az aktív túrához
 5) Költségmegosztási stratégia váltása és elszámolás
-6) Adatok mentése (turak.json) és kilépés
-Válasszon menüpontot (1-6): 2
+6) Teljes költség- és elszámolási összesítő megtekintése
+7) Szakasz vagy utas eltávolítása az aktív túrából
+8) Adatok mentése (turak.json) és kilépés
+Válasszon menüpontot (1-8): 2
 ```
 
 Az aktív túra részleteinek megtekintése távolság szerinti rendezéssel:
@@ -149,20 +152,41 @@ Utasonkénti fizetendő összegek:
   - Szabó Gábor          (180,0 km):       5508 Ft
 ```
 
+Közvetlen költség- és elszámolási összesítő megtekintése a `6`-os menüpontban:
+
+```text
+=========================================================
+Költség- és elszámolási összesítő – Erdélyi körút
+=========================================================
+Össztávolság:                     343,0 km
+Becsült menetidő:            5 óra 59 perc (5,98 óra)
+---------------------------------------------------------
+Teljes üzemanyagköltség:          17598 Ft
+Extra útdíjak (matrica+park):      8900 Ft
+Végösszeg:                        26498 Ft
+---------------------------------------------------------
+Költségmegosztási stratégia: Távolságarányos elosztás
+Utasonkénti fizetendő összegek:
+  - Kovács Péter         (343,0 km):      10495 Ft
+  - Nagy Anna            (343,0 km):      10495 Ft
+  - Szabó Gábor          (180,0 km):       5508 Ft
+=========================================================
+```
+
 ---
 
 ## 5. Megvalósított OOP követelmények
 
 | Követelmény | Megvalósítás a forráskódban |
 | :--- | :--- |
-| **Kapszulázás (Encapsulation)** | Minden domain osztály (`Utas`, `UtvonalSzakasz`, `AutopalyaSzakasz`, `HegyiHagoSzakasz`, `VarosiSzakasz`, `TuraTerv`) kizárólag `private` mezőket használ, nincs publikus módosítható mező. A konstruktorok és validált setterek (`Utas.setMegtettKm`) érvényes objektumállapotot garantálnak; a `TuraTerv.getSzakaszok()` és `TuraTerv.getUtasok()` nem módosítható listanézetet (`Collections.unmodifiableList`) ad vissza. |
-| **Absztrakció (Abstraction)** | Az absztrakt `UtvonalSzakasz` osztály és a `KoltsegOsztasiStrategia` interfész stabil szerződést definiál a szakaszok költség-/menetidő-számítására (`szamoltKoltseg()`, `becsultMenetidoOra()`) és az elszámolási politikákra (`elosztKoltseg(TuraTerv)`). |
-| **Öröklődés és futásidejű polimorfizmus** | Az `UtvonalSzakasz` absztrakt ősosztályból három konkrét osztály származik: `AutopalyaSzakasz` (+15% fogyasztási felár, matricadíj, átlagsebesség), `HegyiHagoSzakasz` (szintemelkedés alapú fogyasztásnövekedés, hajtűkanyarok és emelkedés miatt csökkentett sebesség, minimum 20 km/h) és `VarosiSzakasz` (parkolási díj, dugó faktorral skálázott menetidő). A `TuraTerv` egységesen `List<UtvonalSzakasz>` kollekción keresztül, futásidőben polimorfikusan hívja a felülírt metódusokat. |
+| **Kapszulázás (Encapsulation)** | Minden domain osztály (`Utas`, `UtvonalSzakasz`, `AutopalyaSzakasz`, `HegyiHagoSzakasz`, `VarosiSzakasz`, `OrszagutiSzakasz`, `TuraTerv`) kizárólag `private` mezőket használ, nincs publikus módosítható mező. A konstruktorok és validált setterek (`Utas.setMegtettKm`) érvényes objektumállapotot garantálnak; a `TuraTerv.getSzakaszok()` és `TuraTerv.getUtasok()` nem módosítható listanézetet (`Collections.unmodifiableList`) ad vissza. |
+| **Absztrakció (Abstraction)** | Az absztrakt `UtvonalSzakasz` osztály és a `KoltsegOsztasiStrategia` interfész stabil szerződést definiál a szakaszok költség-/menetidő-számítására (`szamoltKoltseg()`, `becsultMenetidoOra()`, `extraDijKoltseg()`) és az elszámolási politikákra (`elosztKoltseg(TuraTerv)`). |
+| **Öröklődés és futásidejű polimorfizmus** | Az `UtvonalSzakasz` absztrakt ősosztályból négy konkrét osztály származik: `AutopalyaSzakasz` (+15% fogyasztási felár, matricadíj, átlagsebesség), `HegyiHagoSzakasz` (szintemelkedés alapú fogyasztásnövekedés, hajtűkanyarok és emelkedés miatt csökkentett sebesség, minimum 20 km/h), `VarosiSzakasz` (parkolási díj, dugó faktorral skálázott menetidő) és `OrszagutiSzakasz` (extra díj nélküli alapfogyasztás 1.0–1.3 forgalmi szorzóval és 90 km/h alapértelmezett sebességgel). A `TuraTerv` egységesen `List<UtvonalSzakasz>` kollekción keresztül, futásidőben polimorfikusan hívja a felülírt metódusokat. |
 | **Kapcsolatok (Kompozíció és aggregáció)** | A `TuraTerv` kompozícióban tartalmazza saját `UtvonalSzakasz` elemeit (`1` – `0..*`), és aggregációban kezeli a résztvevő `Utas` objektumokat (`1` – `0..*`), a férőhelykorlát szigorú betartásával. |
 | **Generikus kollekciók és rendezés** | A rendszer generikus `ArrayList<UtvonalSzakasz>`, `ArrayList<Utas>` és `LinkedHashMap<Utas, Double>` gyűjteményeket használ. Az `UtvonalSzakasz` megvalósítja a `Comparable<UtvonalSzakasz>` interfészt távolság szerinti természetes rendezéshez, míg a `TuraKezeloService` lambda kifejezésekkel rendezi a szakaszokat költség és menetidő szerint. |
 | **Validáció és saját kivételek** | Három saját kivételosztály kezeli a hibákat: `ErvenytelenAdatException` (érvénytelen bemeneti/domain adatokra), `TulTerheltJarmuException` (ellenőrzött kivétel a jármű férőhelykorlátjának túllépésekor a `TuraTerv.utasHozzaadasa` metódusban) és `AdatMentesException` (ellenőrzött kivétel I/O és JSON hibákra). A `KonzolMenu` minden bemeneti és üzleti kivételt összeomlás nélkül kezel. |
 | **JSON adatmegőrzés (Persistence)** | A `JsonTuraTarolo` Jackson `ObjectMapper` segítségével menti és tölti vissza a `List<TuraTerv>` listát UTF-8 kódolással, `try-with-resources` (`BufferedWriter` / `BufferedReader`) blokkokban. Az `UtvonalSzakasz` `@JsonTypeInfo` és `@JsonSubTypes` annotációkkal biztosítja a polimorf szerializációt és deszerializációt, a számított metódusokon pedig `@JsonIgnore` szerepel. |
-| **Egységtesztek (JUnit 5)** | 4 tesztosztályban 15 JUnit 5 teszteset (`UtvonalSzakaszTest`, `TuraTervTest`, `KoltsegOsztasiStrategiaTest`, `JsonTuraTaroloTest`) ellenőrzi a polimorf számításokat, a kivételeket, a stratégiákat és `@TempDir` segítségével a JSON mentést/visszatöltést. |
+| **Egységtesztek (JUnit 5)** | 4 tesztosztályban 16 JUnit 5 teszteset (`UtvonalSzakaszTest`, `TuraTervTest`, `KoltsegOsztasiStrategiaTest`, `JsonTuraTaroloTest`) ellenőrzi mind a négy szakasztípus polimorf számításait, a kivételeket, a stratégiákat és `@TempDir` segítségével a JSON mentést/visszatöltést. |
 
 ---
 
@@ -185,7 +209,7 @@ A kliens kód (`TuraKezeloService` és `KonzolMenu`) független marad a konkrét
 
 ## 7. UML osztálydiagram
 
-A részletes rendszerterv és a felhasználói történetek (`US-01` – `US-06`) a [docs/uml-diagram.md](docs/uml-diagram.md) dokumentumban, az osztálydiagram szerkeszthető PlantUML forrása pedig a [docs/uml-diagram.puml](docs/uml-diagram.puml) fájlban érhető el.
+A részletes rendszerterv és a felhasználói történetek (`US-01` – `US-07`) a [docs/uml-diagram.md](docs/uml-diagram.md) dokumentumban, az osztálydiagram szerkeszthető PlantUML forrása pedig a [docs/uml-diagram.puml](docs/uml-diagram.puml) fájlban érhető el.
 
 ```mermaid
 classDiagram
@@ -205,6 +229,8 @@ classDiagram
         #UtvonalSzakasz(nev: String, tavolsagKm: double, alapFogyasztas: double, uzemanyagAr: double)
         #alapUzemanyagKoltseg() double
         +szamoltKoltseg()* double
+        +extraDijKoltseg() double
+        +uzemanyagKoltseg() double
         +becsultMenetidoOra()* double
         +getSzakaszTipus()* String
         +getNev() String
@@ -222,6 +248,7 @@ classDiagram
         +getMatricaDij() double
         +getAtlagSebesseg() double
         +szamoltKoltseg() double
+        +extraDijKoltseg() double
         +becsultMenetidoOra() double
         +getSzakaszTipus() String
     }
@@ -248,6 +275,21 @@ classDiagram
         +VarosiSzakasz(nev: String, tavolsagKm: double, alapFogyasztas: double, uzemanyagAr: double, parkolasiDij: double, dugoFaktor: double)
         +getParkolasiDij() double
         +getDugoFaktor() double
+        +szamoltKoltseg() double
+        +extraDijKoltseg() double
+        +becsultMenetidoOra() double
+        +getSzakaszTipus() String
+    }
+
+    class OrszagutiSzakasz {
+        +ALAP_ORSZAGUTI_SEBESSEG_KMH: double$
+        +ALAP_FORGALMI_SZORZO: double$
+        -atlagSebesseg: double
+        -forgalmiSzorzo: double
+        +OrszagutiSzakasz(nev: String, tavolsagKm: double, alapFogyasztas: double, uzemanyagAr: double, atlagSebesseg: double, forgalmiSzorzo: double)
+        +OrszagutiSzakasz(nev: String, tavolsagKm: double, alapFogyasztas: double, uzemanyagAr: double)
+        +getAtlagSebesseg() double
+        +getForgalmiSzorzo() double
         +szamoltKoltseg() double
         +becsultMenetidoOra() double
         +getSzakaszTipus() String
@@ -281,6 +323,8 @@ classDiagram
         +getSzabadFerohelyekSzama() int
         +osszesTavolsagKm() double
         +osszesKoltseg() double
+        +osszesExtraDij() double
+        +osszesUzemanyagKoltseg() double
         +osszesMenetidoOra() double
         +getSzakaszokTavolsagSzerintRendezve() List~UtvonalSzakasz~
     }
@@ -354,6 +398,7 @@ classDiagram
     UtvonalSzakasz <|-- AutopalyaSzakasz
     UtvonalSzakasz <|-- HegyiHagoSzakasz
     UtvonalSzakasz <|-- VarosiSzakasz
+    UtvonalSzakasz <|-- OrszagutiSzakasz
 
     TuraTerv "1" *-- "0..*" UtvonalSzakasz : tartalmaz
     TuraTerv "1" o-- "0..*" Utas : résztvevők
@@ -390,7 +435,7 @@ classDiagram
 ### Ismert korlátok
 - **Konzolos felület:** Az alkalmazás szándékosan interaktív konzolos felületre épül, grafikus (GUI) felület vagy külső térkép-/üzemanyagár-API integráció nem része a jelenlegi verziónak.
 - **Egyjárműves és egypénznemű fókusz:** Egy `TuraTerv` egyetlen járművet, rögzített alapfogyasztást és forintban (`Ft`) megadott költségeket kezel; több járműves konvojok vagy devizaátváltás kezelése jövőbeli bővítési lehetőség.
-- **Szerkesztési műveletek a menüben:** A domain réteg támogatja a szakaszok és utasok eltávolítását (`szakaszEltavolitasa`, `utasEltavolitasa`), de a konzolos menü jelenleg az új elemek felvételére, megtekintésére, rendezésére és elszámolására fókuszál.
+- **Elemek helyben történő szerkesztése:** A szakaszok és utasok hozzáadása és eltávolítása a konzolos menüből is támogatott (`3)`, `4)`, `7)` menüpontok), de egy már felvett szakasz vagy utas paramétereinek módosítása jelenleg eltávolítással és újbóli felvétellel végezhető el.
 
 ---
 

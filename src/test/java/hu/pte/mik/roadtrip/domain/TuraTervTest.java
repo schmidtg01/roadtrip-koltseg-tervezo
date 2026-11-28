@@ -46,11 +46,18 @@ class TuraTervTest {
         TuraTerv tura = new TuraTerv("Teszt túra", "VW Golf", 4, 7.0, 600.0);
         UtvonalSzakasz autopalya = new AutopalyaSzakasz("M1", 100.0, 7.0, 600.0, 3000.0, 100.0);
         UtvonalSzakasz varosi = new VarosiSzakasz("Győr", 35.0, 7.0, 600.0, 1000.0, 2.0);
+        UtvonalSzakasz orszaguti = new OrszagutiSzakasz("82-es főút", 90.0, 7.0, 600.0, 90.0, 1.0);
         tura.szakaszHozzaadasa(autopalya);
         tura.szakaszHozzaadasa(varosi);
+        tura.szakaszHozzaadasa(orszaguti);
 
-        assertEquals(135.0, tura.osszesTavolsagKm(), EPSZILON);
-        assertEquals(autopalya.szamoltKoltseg() + varosi.szamoltKoltseg(), tura.osszesKoltseg(), EPSZILON);
-        assertEquals(3.0, tura.osszesMenetidoOra(), EPSZILON);
+        assertEquals(225.0, tura.osszesTavolsagKm(), EPSZILON);
+        assertEquals(4000.0, tura.osszesExtraDij(), EPSZILON);
+        assertEquals(tura.osszesKoltseg() - 4000.0, tura.osszesUzemanyagKoltseg(), EPSZILON);
+        assertEquals(
+                autopalya.szamoltKoltseg() + varosi.szamoltKoltseg() + orszaguti.szamoltKoltseg(),
+                tura.osszesKoltseg(),
+                EPSZILON);
+        assertEquals(4.0, tura.osszesMenetidoOra(), EPSZILON);
     }
 }
