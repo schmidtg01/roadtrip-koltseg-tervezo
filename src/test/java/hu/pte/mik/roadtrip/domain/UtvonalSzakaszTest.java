@@ -54,7 +54,26 @@ class UtvonalSzakaszTest {
         // Alap üzemanyag: 0.35 * 8.0 * 600.0 = 1680 Ft + 1800 Ft parkolás = 3480 Ft
         // Menetidő: (35.0 / 35.0) * 1.5 = 1.5 óra
         assertEquals(3480.0, szakasz.szamoltKoltseg(), EPSZILON);
+        assertEquals(1800.0, szakasz.extraDijKoltseg(), EPSZILON);
+        assertEquals(1680.0, szakasz.uzemanyagKoltseg(), EPSZILON);
         assertEquals(1.5, szakasz.becsultMenetidoOra(), EPSZILON);
+    }
+
+    @Test
+    @DisplayName("OrszagutiSzakasz extra díj nélkül, forgalmi szorzóval és átlagsebességgel számol")
+    void orszagutiSzakaszPolimorfKoltsegEsMenetido() {
+        UtvonalSzakasz alap = new OrszagutiSzakasz("6-os főút", 90.0, 7.0, 600.0);
+        // Alapértelmezett: 90 km/h, 1.0 szorzó -> 0.9 * 7.0 * 600.0 = 3780 Ft, 1.0 óra
+        assertEquals(3780.0, alap.szamoltKoltseg(), EPSZILON);
+        assertEquals(0.0, alap.extraDijKoltseg(), EPSZILON);
+        assertEquals(3780.0, alap.uzemanyagKoltseg(), EPSZILON);
+        assertEquals(1.0, alap.becsultMenetidoOra(), EPSZILON);
+        assertEquals("Országúti", alap.getSzakaszTipus());
+
+        UtvonalSzakasz forgalmas = new OrszagutiSzakasz("66-os főút", 80.0, 7.5, 600.0, 80.0, 1.2);
+        // Alap üzemanyag: 0.8 * 7.5 * 600.0 = 3600 Ft * 1.2 = 4320 Ft, 1.0 óra
+        assertEquals(4320.0, forgalmas.szamoltKoltseg(), EPSZILON);
+        assertEquals(1.0, forgalmas.becsultMenetidoOra(), EPSZILON);
     }
 
     @Test
@@ -86,5 +105,11 @@ class UtvonalSzakaszTest {
                 () -> new HegyiHagoSzakasz("Hágó", 50.0, 7.0, 600.0, 500, -1));
         assertThrows(ErvenytelenAdatException.class,
                 () -> new VarosiSzakasz("Város", 20.0, 7.0, 600.0, 1000.0, 0.9));
+        assertThrows(ErvenytelenAdatException.class,
+                () -> new OrszagutiSzakasz("Főút", 50.0, 7.0, 600.0, 0.0, 1.0));
+        assertThrows(ErvenytelenAdatException.class,
+                () -> new OrszagutiSzakasz("Főút", 50.0, 7.0, 600.0, 90.0, 0.95));
+        assertThrows(ErvenytelenAdatException.class,
+                () -> new OrszagutiSzakasz("Főút", 50.0, 7.0, 600.0, 90.0, 1.35));
     }
 }

@@ -2,6 +2,7 @@ package hu.pte.mik.roadtrip.persistence;
 
 import hu.pte.mik.roadtrip.domain.AutopalyaSzakasz;
 import hu.pte.mik.roadtrip.domain.HegyiHagoSzakasz;
+import hu.pte.mik.roadtrip.domain.OrszagutiSzakasz;
 import hu.pte.mik.roadtrip.domain.TuraTerv;
 import hu.pte.mik.roadtrip.domain.Utas;
 import hu.pte.mik.roadtrip.domain.UtvonalSzakasz;
@@ -38,8 +39,9 @@ class JsonTuraTaroloTest {
         erdely.szakaszHozzaadasa(new AutopalyaSzakasz("M5", 235.0, 6.8, 620.0, 6400.0, 125.0));
         erdely.szakaszHozzaadasa(new HegyiHagoSzakasz("Transzfogarasi", 90.0, 6.8, 620.0, 1450, 28));
         erdely.szakaszHozzaadasa(new VarosiSzakasz("Kolozsvár", 18.0, 6.8, 620.0, 2500.0, 1.45));
-        erdely.utasHozzaadasa(new Utas("Kovács Péter", 343.0));
-        erdely.utasHozzaadasa(new Utas("Nagy Anna", 180.0));
+        erdely.szakaszHozzaadasa(new OrszagutiSzakasz("DN1 országút", 110.0, 6.8, 620.0, 85.0, 1.15));
+        erdely.utasHozzaadasa(new Utas("Kovács Péter", 453.0));
+        erdely.utasHozzaadasa(new Utas("Nagy Anna", 250.0));
 
         List<TuraTerv> eredeti = List.of(erdely);
         tarolo.ment(eredeti, fajl);
@@ -56,6 +58,7 @@ class JsonTuraTaroloTest {
         assertInstanceOf(AutopalyaSzakasz.class, szakaszok.get(0));
         assertInstanceOf(HegyiHagoSzakasz.class, szakaszok.get(1));
         assertInstanceOf(VarosiSzakasz.class, szakaszok.get(2));
+        assertInstanceOf(OrszagutiSzakasz.class, szakaszok.get(3));
     }
 
     @Test

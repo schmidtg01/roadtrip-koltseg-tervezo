@@ -34,6 +34,8 @@ classDiagram
         #UtvonalSzakasz(nev: String, tavolsagKm: double, alapFogyasztas: double, uzemanyagAr: double)
         #alapUzemanyagKoltseg() double
         +szamoltKoltseg()* double
+        +extraDijKoltseg() double
+        +uzemanyagKoltseg() double
         +becsultMenetidoOra()* double
         +getSzakaszTipus()* String
         +getNev() String
@@ -51,6 +53,7 @@ classDiagram
         +getMatricaDij() double
         +getAtlagSebesseg() double
         +szamoltKoltseg() double
+        +extraDijKoltseg() double
         +becsultMenetidoOra() double
         +getSzakaszTipus() String
     }
@@ -77,6 +80,21 @@ classDiagram
         +VarosiSzakasz(nev: String, tavolsagKm: double, alapFogyasztas: double, uzemanyagAr: double, parkolasiDij: double, dugoFaktor: double)
         +getParkolasiDij() double
         +getDugoFaktor() double
+        +szamoltKoltseg() double
+        +extraDijKoltseg() double
+        +becsultMenetidoOra() double
+        +getSzakaszTipus() String
+    }
+
+    class OrszagutiSzakasz {
+        +ALAP_ORSZAGUTI_SEBESSEG_KMH: double$
+        +ALAP_FORGALMI_SZORZO: double$
+        -atlagSebesseg: double
+        -forgalmiSzorzo: double
+        +OrszagutiSzakasz(nev: String, tavolsagKm: double, alapFogyasztas: double, uzemanyagAr: double, atlagSebesseg: double, forgalmiSzorzo: double)
+        +OrszagutiSzakasz(nev: String, tavolsagKm: double, alapFogyasztas: double, uzemanyagAr: double)
+        +getAtlagSebesseg() double
+        +getForgalmiSzorzo() double
         +szamoltKoltseg() double
         +becsultMenetidoOra() double
         +getSzakaszTipus() String
@@ -110,6 +128,8 @@ classDiagram
         +getSzabadFerohelyekSzama() int
         +osszesTavolsagKm() double
         +osszesKoltseg() double
+        +osszesExtraDij() double
+        +osszesUzemanyagKoltseg() double
         +osszesMenetidoOra() double
         +getSzakaszokTavolsagSzerintRendezve() List~UtvonalSzakasz~
     }
@@ -183,6 +203,7 @@ classDiagram
     UtvonalSzakasz <|-- AutopalyaSzakasz
     UtvonalSzakasz <|-- HegyiHagoSzakasz
     UtvonalSzakasz <|-- VarosiSzakasz
+    UtvonalSzakasz <|-- OrszagutiSzakasz
 
     TuraTerv "1" *-- "0..*" UtvonalSzakasz : tartalmaz
     TuraTerv "1" o-- "0..*" Utas : résztvevők
@@ -230,9 +251,9 @@ classDiagram
 
 ### US-02 – Eltérő típusú útvonalszakaszok hozzáadása
 - **Mint** túraszervező,
-- **szeretnék** autópálya, hegyi hágó és városi útvonalszakaszokat felvenni az aktív túrához,
-- **hogy** a költség- és menetidő-becslés tükrözze a különböző úttípusok sajátosságait (matricadíj és +15% autópályás fogyasztás, hegyi szintemelkedés és hajtűkanyarok, városi parkolási díj és dugó faktor).
-- **Elfogadási kritériumok:** Minden szakasz a saját polimorf képletével számolja ki a költségét és menetidejét, a túra összesítője pedig ezek összegét jeleníti meg.
+- **szeretnék** autópálya, hegyi hágó, városi és normál országúti útvonalszakaszokat felvenni az aktív túrához,
+- **hogy** a költség- és menetidő-becslés tükrözze a különböző úttípusok sajátosságait (matricadíj és +15% autópályás fogyasztás, hegyi szintemelkedés és hajtűkanyarok, városi parkolási díj és dugó faktor, illetve normál országúti forgalmi szorzó).
+- **Elfogadási kritériumok:** Minden szakasz a saját polimorf képletével számolja ki a költségét és menetidejét, a szakasz felvétele után opcionálisan frissíthető a felvett utasok megtett távolsága is, és a program azonnal megjeleníti a frissített összköltséget.
 
 ### US-03 – Útvonalszakaszok áttekintése és rendezése
 - **Mint** túraszervező,
@@ -256,7 +277,13 @@ classDiagram
 - **Mint** visszatérő felhasználó,
 - **szeretném**, ha kilépéskor a túratervek elmentődnének a `turak.json` fájlba és következő indításkor automatikusan visszatöltődnének,
 - **hogy** ne vesszenek el a megtervezett túráim.
-- **Elfogadási kritériumok:** A mentés és betöltés megőrzi a polimorf szakasztípusokat (`AutopalyaSzakasz`, `HegyiHagoSzakasz`, `VarosiSzakasz`), és ha még nem létezik adatfájl, egy azonnal kipróbálható mintatúra jön létre.
+- **Elfogadási kritériumok:** A mentés és betöltés megőrzi a polimorf szakasztípusokat (`AutopalyaSzakasz`, `HegyiHagoSzakasz`, `VarosiSzakasz`, `OrszagutiSzakasz`), és ha még nem létezik adatfájl, egy azonnal kipróbálható mintatúra jön létre.
+
+### US-07 – Közvetlen költségösszesítő és elemek eltávolítása
+- **Mint** túraszervező,
+- **szeretnék** egyetlen gombnyomással részletes költség- és elszámolási összesítőt (üzemanyagköltség, extra útdíjak, végösszeg, fejenkénti részek) lekérni, valamint szakaszokat és utasokat eltávolítani az aktív túrából,
+- **hogy** könnyen finomhangolhassam a túratervet a tervezés során.
+- **Elfogadási kritériumok:** A `6)` menüpont részletes bontásban jeleníti meg az összesítőt (utasok hiányában barátságos üzenettel), a `7)` menüpont pedig lehetővé teszi bármely felvett szakasz vagy utas eltávolítását.
 
 ---
 
@@ -264,4 +291,4 @@ classDiagram
 
 - **Kapszulázás és invariánsok:** Minden domain osztály privát mezőkkel és validáló konstruktorokkal rendelkezik; a `TuraTerv` gyűjteményei nem módosítható nézetként (`Collections.unmodifiableList`) érhetők el kívülről, így a férőhelykorlát nem kerülhető meg.
 - **Polimorf JSON perzisztencia:** Az `UtvonalSzakasz` osztály `@JsonTypeInfo` és `@JsonSubTypes` annotációkkal rendelkezik, a számított metódusok `@JsonIgnore`-ral jelöltek, a fájlkezelés pedig UTF-8 kódolással és `try-with-resources` blokkokkal történik.
-- **Ismert korlátok:** Az alkalmazás jelenleg egységes pénznemben (Ft) számol, és egy túrán belül egyetlen járművet és rögzített üzemanyagárat kezel; a túrák szerkesztése (pl. meglévő szakasz/utas törlése) jelenleg a domain API-ban támogatott, a konzolos menü a fő tervezési folyamatra fókuszál.
+- **Ismert korlátok:** Az alkalmazás jelenleg egységes pénznemben (Ft) számol, és egy túrán belül egyetlen járművet és rögzített üzemanyagárat kezel; a felvett szakaszok és utasok eltávolítása támogatott a menüből, de meglévő elemek helyben történő átírása helyett törlés és újbóli felvétel szükséges.

@@ -21,6 +21,8 @@ package "hu.pte.mik.roadtrip.domain" {
         # UtvonalSzakasz(nev: String, tavolsagKm: double, alapFogyasztas: double, uzemanyagAr: double)
         # alapUzemanyagKoltseg(): double
         + {abstract} szamoltKoltseg(): double
+        + extraDijKoltseg(): double
+        + uzemanyagKoltseg(): double
         + {abstract} becsultMenetidoOra(): double
         + {abstract} getSzakaszTipus(): String
         + getNev(): String
@@ -38,6 +40,7 @@ package "hu.pte.mik.roadtrip.domain" {
         + getMatricaDij(): double
         + getAtlagSebesseg(): double
         + szamoltKoltseg(): double
+        + extraDijKoltseg(): double
         + becsultMenetidoOra(): double
         + getSzakaszTipus(): String
     }
@@ -64,6 +67,21 @@ package "hu.pte.mik.roadtrip.domain" {
         + VarosiSzakasz(nev: String, tavolsagKm: double, alapFogyasztas: double, uzemanyagAr: double, parkolasiDij: double, dugoFaktor: double)
         + getParkolasiDij(): double
         + getDugoFaktor(): double
+        + szamoltKoltseg(): double
+        + extraDijKoltseg(): double
+        + becsultMenetidoOra(): double
+        + getSzakaszTipus(): String
+    }
+
+    class OrszagutiSzakasz {
+        + {static} ALAP_ORSZAGUTI_SEBESSEG_KMH: double
+        + {static} ALAP_FORGALMI_SZORZO: double
+        - atlagSebesseg: double
+        - forgalmiSzorzo: double
+        + OrszagutiSzakasz(nev: String, tavolsagKm: double, alapFogyasztas: double, uzemanyagAr: double, atlagSebesseg: double, forgalmiSzorzo: double)
+        + OrszagutiSzakasz(nev: String, tavolsagKm: double, alapFogyasztas: double, uzemanyagAr: double)
+        + getAtlagSebesseg(): double
+        + getForgalmiSzorzo(): double
         + szamoltKoltseg(): double
         + becsultMenetidoOra(): double
         + getSzakaszTipus(): String
@@ -97,6 +115,8 @@ package "hu.pte.mik.roadtrip.domain" {
         + getSzabadFerohelyekSzama(): int
         + osszesTavolsagKm(): double
         + osszesKoltseg(): double
+        + osszesExtraDij(): double
+        + osszesUzemanyagKoltseg(): double
         + osszesMenetidoOra(): double
         + getSzakaszokTavolsagSzerintRendezve(): List<UtvonalSzakasz>
     }
@@ -173,6 +193,7 @@ ComparableUtvonalSzakasz <|.. UtvonalSzakasz
 UtvonalSzakasz <|-- AutopalyaSzakasz
 UtvonalSzakasz <|-- HegyiHagoSzakasz
 UtvonalSzakasz <|-- VarosiSzakasz
+UtvonalSzakasz <|-- OrszagutiSzakasz
 
 KoltsegOsztasiStrategia <|.. EgyenloElosztasStrategia
 KoltsegOsztasiStrategia <|.. TavolsagAranyosStrategia

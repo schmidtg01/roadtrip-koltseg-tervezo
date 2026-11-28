@@ -19,7 +19,8 @@ import java.util.Objects;
 @JsonSubTypes({
         @JsonSubTypes.Type(value = AutopalyaSzakasz.class, name = "AUTOPALYA"),
         @JsonSubTypes.Type(value = HegyiHagoSzakasz.class, name = "HEGYI_HAGO"),
-        @JsonSubTypes.Type(value = VarosiSzakasz.class, name = "VAROSI")
+        @JsonSubTypes.Type(value = VarosiSzakasz.class, name = "VAROSI"),
+        @JsonSubTypes.Type(value = OrszagutiSzakasz.class, name = "ORSZAGUTI")
 })
 public abstract class UtvonalSzakasz implements Comparable<UtvonalSzakasz> {
 
@@ -77,6 +78,27 @@ public abstract class UtvonalSzakasz implements Comparable<UtvonalSzakasz> {
      * @return a szakasz teljes költsége Ft-ban
      */
     public abstract double szamoltKoltseg();
+
+    /**
+     * Visszaadja a szakaszhoz kapcsolódó extra útdíjakat (pl. matrica- vagy parkolási díj) Ft-ban.
+     * Alapértelmezés szerint 0 Ft.
+     *
+     * @return extra díjak összege Ft-ban
+     */
+    @JsonIgnore
+    public double extraDijKoltseg() {
+        return 0.0;
+    }
+
+    /**
+     * Visszaadja a szakasz üzemanyagköltségét az extra díjak (matrica, parkolás) nélkül, Ft-ban.
+     *
+     * @return üzemanyagköltség Ft-ban
+     */
+    @JsonIgnore
+    public double uzemanyagKoltseg() {
+        return szamoltKoltseg() - extraDijKoltseg();
+    }
 
     /**
      * Kiszámítja a szakasz becsült menetidejét órában.

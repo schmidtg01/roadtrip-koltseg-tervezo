@@ -190,6 +190,20 @@ public class TuraTerv {
     }
 
     @JsonIgnore
+    public double osszesExtraDij() {
+        return szakaszok.stream()
+                .mapToDouble(UtvonalSzakasz::extraDijKoltseg)
+                .sum();
+    }
+
+    @JsonIgnore
+    public double osszesUzemanyagKoltseg() {
+        return szakaszok.stream()
+                .mapToDouble(UtvonalSzakasz::uzemanyagKoltseg)
+                .sum();
+    }
+
+    @JsonIgnore
     public double osszesMenetidoOra() {
         return szakaszok.stream()
                 .mapToDouble(UtvonalSzakasz::becsultMenetidoOra)

@@ -2,6 +2,7 @@ package hu.pte.mik.roadtrip.ui;
 
 import hu.pte.mik.roadtrip.domain.AutopalyaSzakasz;
 import hu.pte.mik.roadtrip.domain.HegyiHagoSzakasz;
+import hu.pte.mik.roadtrip.domain.OrszagutiSzakasz;
 import hu.pte.mik.roadtrip.domain.TuraTerv;
 import hu.pte.mik.roadtrip.domain.Utas;
 import hu.pte.mik.roadtrip.domain.UtvonalSzakasz;
@@ -64,7 +65,7 @@ public class KonzolMenu {
         boolean fut = true;
         while (fut) {
             foMenuKiirasa();
-            Integer valasztas = olvasEgesz("Válasszon menüpontot (1-6): ", 1, 6);
+            Integer valasztas = olvasEgesz("Válasszon menüpontot (1-8): ", 1, 8);
             if (valasztas == null) {
                 System.out.println("\nBemeneti csatorna lezárult, kilépés...");
                 break;
@@ -76,7 +77,9 @@ public class KonzolMenu {
                 case 3 -> utvonalSzakaszHozzaadasa();
                 case 4 -> utasHozzaadasa();
                 case 5 -> koltsegStrategiaValtasaEsElszamolas();
-                case 6 -> {
+                case 6 -> teljesKoltsegEsElszamolasOsszesito();
+                case 7 -> szakaszVagyUtasEltavolitasa();
+                case 8 -> {
                     adatokMentese();
                     System.out.println("Viszontlátásra! Biztonságos utazást kívánunk!");
                     fut = false;
@@ -176,7 +179,9 @@ public class KonzolMenu {
         System.out.println("3) Útvonalszakasz hozzáadása az aktív túrához");
         System.out.println("4) Utas hozzáadása az aktív túrához");
         System.out.println("5) Költségmegosztási stratégia váltása és elszámolás");
-        System.out.println("6) Adatok mentése (turak.json) és kilépés");
+        System.out.println("6) Teljes költség- és elszámolási összesítő megtekintése");
+        System.out.println("7) Szakasz vagy utas eltávolítása az aktív túrából");
+        System.out.println("8) Adatok mentése (turak.json) és kilépés");
     }
 
     private void ujTuraLetrehozasa() {
@@ -301,8 +306,9 @@ public class KonzolMenu {
         System.out.println("1) Autópálya szakasz (+15% fogyasztási felár, matricadíj)");
         System.out.println("2) Hegyi hágó szakasz (szintemelkedés és hajtűkanyarok)");
         System.out.println("3) Városi szakasz (parkolási díj és dugó faktor)");
+        System.out.println("4) Normál országúti szakasz (alapfogyasztás, forgalmi szorzó)");
 
-        Integer tipus = olvasEgesz("Válasszon szakasztípust (1-3): ", 1, 3);
+        Integer tipus = olvasEgesz("Válasszon szakasztípust (1-4): ", 1, 4);
         if (tipus == null) {
             return;
         }
@@ -358,6 +364,25 @@ public class KonzolMenu {
                             nev, tavolsag, aktiv.getAlapFogyasztas(), aktiv.getUzemanyagAr(),
                             parkolasiDij, dugoFaktor);
                 }
+                case 4 -> {
+                    Double atlagSebesseg = olvasValosSzamAlapertelmezessel(
+                            "Átlagsebesség (km/h, Enter = 90): ",
+                            OrszagutiSzakasz.ALAP_ORSZAGUTI_SEBESSEG_KMH,
+                            0.0, true, null);
+                    if (atlagSebesseg == null) {
+                        return;
+                    }
+                    Double forgalmiSzorzo = olvasValosSzamAlapertelmezessel(
+                            "Forgalmi szorzó (1.0 - 1.3, Enter = 1.0): ",
+                            OrszagutiSzakasz.ALAP_FORGALMI_SZORZO,
+                            OrszagutiSzakasz.MIN_FORGALMI_SZORZO, false, OrszagutiSzakasz.MAX_FORGALMI_SZORZO);
+                    if (forgalmiSzorzo == null) {
+                        return;
+                    }
+                    ujSzakasz = new OrszagutiSzakasz(
+                            nev, tavolsag, aktiv.getAlapFogyasztas(), aktiv.getUzemanyagAr(),
+                            atlagSebesseg, forgalmiSzorzo);
+                }
                 default -> {
                     return;
                 }
@@ -365,6 +390,21 @@ public class KonzolMenu {
 
             aktiv.szakaszHozzaadasa(ujSzakasz);
             System.out.println("Szakasz sikeresen hozzáadva: " + ujSzakasz);
+
+            if (!aktiv.getUtasok().isEmpty()) {
+                Boolean noveljeUtasokKm = olvasIgenNem(String.format(
+                        "Növelje az eddig felvett %d utas megtett kilométerét is %.1f km-rel? (i/n): ",
+                        aktiv.getUtasok().size(), ujSzakasz.getTavolsagKm()));
+                if (Boolean.TRUE.equals(noveljeUtasokKm)) {
+                    for (Utas utas : aktiv.getUtasok()) {
+                        utas.setMegtettKm(utas.getMegtettKm() + ujSzakasz.getTavolsagKm());
+                    }
+                    System.out.println("Az utasok megtett távolsága frissítve lett.");
+                }
+            }
+
+            System.out.printf("Frissített túra összköltség: %.0f Ft (össztávolság: %.1f km)%n",
+                    aktiv.osszesKoltseg(), aktiv.osszesTavolsagKm());
         } catch (ErvenytelenAdatException e) {
             System.out.println("Hiba a szakasz hozzáadása során: " + e.getMessage());
         }
@@ -396,6 +436,9 @@ public class KonzolMenu {
             Utas ujUtas = new Utas(nev, megtettKm);
             aktiv.utasHozzaadasa(ujUtas);
             System.out.println("Utas sikeresen hozzáadva: " + ujUtas);
+            System.out.printf("Frissített túra összköltség: %.0f Ft | Aktív stratégia: %s%n",
+                    aktiv.osszesKoltseg(), turaKezeloService.getStrategia().getNev());
+            fejenkentiElszamolasKiirasa(aktiv);
         } catch (TulTerheltJarmuException e) {
             System.out.println("Nem sikerült hozzáadni az utast: " + e.getMessage());
         } catch (ErvenytelenAdatException e) {
@@ -427,10 +470,42 @@ public class KonzolMenu {
         }
 
         System.out.printf("%nAktív stratégia beállítva: %s%n", turaKezeloService.getStrategia().getNev());
+        System.out.printf("Túra teljes költsége: %.0f Ft%n", aktiv.osszesKoltseg());
+        fejenkentiElszamolasKiirasa(aktiv);
+    }
+
+    private void teljesKoltsegEsElszamolasOsszesito() {
+        TuraTerv aktiv = getAktivTura();
+        if (aktiv == null) {
+            System.out.println("\nNincs aktív túra! Először hozzon létre vagy válasszon ki egy túrát.");
+            return;
+        }
+
+        System.out.println("\n=========================================================");
+        System.out.printf("Költség- és elszámolási összesítő – %s%n", aktiv.getTuraNev());
+        System.out.println("=========================================================");
+        System.out.printf("Össztávolság:                %10.1f km%n", aktiv.osszesTavolsagKm());
+        System.out.printf("Becsült menetidő:            %10s (%.2f óra)%n",
+                formazIdo(aktiv.osszesMenetidoOra()), aktiv.osszesMenetidoOra());
+        System.out.println("---------------------------------------------------------");
+        System.out.printf("Teljes üzemanyagköltség:     %10.0f Ft%n", aktiv.osszesUzemanyagKoltseg());
+        System.out.printf("Extra útdíjak (matrica+park):%10.0f Ft%n", aktiv.osszesExtraDij());
+        System.out.printf("Végösszeg:                   %10.0f Ft%n", aktiv.osszesKoltseg());
+        System.out.println("---------------------------------------------------------");
+        System.out.printf("Költségmegosztási stratégia: %s%n", turaKezeloService.getStrategia().getNev());
+
+        fejenkentiElszamolasKiirasa(aktiv);
+        System.out.println("=========================================================");
+    }
+
+    private void fejenkentiElszamolasKiirasa(TuraTerv tura) {
+        if (tura.getUtasok().isEmpty()) {
+            System.out.println("Még nincs felvett utas a túrában, így fejenkénti elszámolás még nem számítható.");
+            return;
+        }
 
         try {
-            Map<Utas, Double> elszamolas = turaKezeloService.koltsegElszamolas(aktiv);
-            System.out.printf("Túra teljes költsége: %.0f Ft%n", aktiv.osszesKoltseg());
+            Map<Utas, Double> elszamolas = turaKezeloService.koltsegElszamolas(tura);
             System.out.println("Utasonkénti fizetendő összegek:");
             for (Map.Entry<Utas, Double> bejegyzes : elszamolas.entrySet()) {
                 Utas utas = bejegyzes.getKey();
@@ -438,7 +513,70 @@ public class KonzolMenu {
                         utas.getNev(), utas.getMegtettKm(), bejegyzes.getValue());
             }
         } catch (ErvenytelenAdatException e) {
-            System.out.println("Nem számítható ki az elszámolás: " + e.getMessage());
+            System.out.println("Nem számítható ki a fejenkénti elszámolás: " + e.getMessage());
+        }
+    }
+
+    private void szakaszVagyUtasEltavolitasa() {
+        TuraTerv aktiv = getAktivTura();
+        if (aktiv == null) {
+            System.out.println("\nNincs aktív túra! Először hozzon létre vagy válasszon ki egy túrát.");
+            return;
+        }
+
+        System.out.printf("\n--- Eltávolítás az aktív túrából (%s) ---%n", aktiv.getTuraNev());
+        System.out.println("1) Útvonalszakasz eltávolítása");
+        System.out.println("2) Utas eltávolítása");
+        System.out.println("0) Vissza a főmenübe");
+
+        Integer valasztas = olvasEgesz("Válasszon műveletet (0-2): ", 0, 2);
+        if (valasztas == null || valasztas == 0) {
+            return;
+        }
+
+        if (valasztas == 1) {
+            List<UtvonalSzakasz> szakaszok = aktiv.getSzakaszok();
+            if (szakaszok.isEmpty()) {
+                System.out.println("Nincs eltávolítható útvonalszakasz a túrában.");
+                return;
+            }
+            System.out.println("\nAktív túra útvonalszakaszai:");
+            for (int i = 0; i < szakaszok.size(); i++) {
+                System.out.printf("  %d) %s%n", i + 1, szakaszok.get(i));
+            }
+            Integer sorszam = olvasEgesz(
+                    String.format("Melyik szakaszt szeretné eltávolítani? (1-%d, 0 = mégse): ", szakaszok.size()),
+                    0, szakaszok.size());
+            if (sorszam == null || sorszam == 0) {
+                return;
+            }
+            UtvonalSzakasz torlendo = szakaszok.get(sorszam - 1);
+            if (aktiv.szakaszEltavolitasa(torlendo)) {
+                System.out.println("Szakasz sikeresen eltávolítva: " + torlendo.getNev());
+                System.out.printf("Frissített túra összköltség: %.0f Ft (össztávolság: %.1f km)%n",
+                        aktiv.osszesKoltseg(), aktiv.osszesTavolsagKm());
+            }
+        } else {
+            List<Utas> utasok = aktiv.getUtasok();
+            if (utasok.isEmpty()) {
+                System.out.println("Nincs eltávolítható utas a túrában.");
+                return;
+            }
+            System.out.println("\nAktív túra utasai:");
+            for (int i = 0; i < utasok.size(); i++) {
+                System.out.printf("  %d) %s%n", i + 1, utasok.get(i));
+            }
+            Integer sorszam = olvasEgesz(
+                    String.format("Melyik utast szeretné eltávolítani? (1-%d, 0 = mégse): ", utasok.size()),
+                    0, utasok.size());
+            if (sorszam == null || sorszam == 0) {
+                return;
+            }
+            Utas torlendo = utasok.get(sorszam - 1);
+            if (aktiv.utasEltavolitasa(torlendo)) {
+                System.out.println("Utas sikeresen eltávolítva: " + torlendo.getNev());
+                fejenkentiElszamolasKiirasa(aktiv);
+            }
         }
     }
 
@@ -515,6 +653,60 @@ public class KonzolMenu {
             } catch (NumberFormatException e) {
                 System.out.println("Hiba: érvénytelen bemenet, kérem számot írjon be (pl. 12.5)!");
             }
+        }
+    }
+
+    private Double olvasValosSzamAlapertelmezessel(
+            String uzenet,
+            double alapertelmezett,
+            double min,
+            boolean szigoruMin,
+            Double max) {
+        while (true) {
+            System.out.print(uzenet);
+            if (!scanner.hasNextLine()) {
+                return null;
+            }
+            String sor = scanner.nextLine().trim().replace(',', '.');
+            if (sor.isEmpty()) {
+                return alapertelmezett;
+            }
+            try {
+                double ertek = Double.parseDouble(sor);
+                if (Double.isNaN(ertek) || Double.isInfinite(ertek)) {
+                    System.out.println("Hiba: kérem valós számot adjon meg!");
+                    continue;
+                }
+                if (szigoruMin ? ertek <= min : ertek < min) {
+                    String feltetel = szigoruMin ? "nagyobb" : "nagyobb vagy egyenlő";
+                    System.out.printf("Hiba: az értéknek %.1f-nél %snak kell lennie!%n", min, feltetel);
+                    continue;
+                }
+                if (max != null && ertek > max) {
+                    System.out.printf("Hiba: az érték legfeljebb %.1f lehet!%n", max);
+                    continue;
+                }
+                return ertek;
+            } catch (NumberFormatException e) {
+                System.out.println("Hiba: érvénytelen bemenet, kérem számot írjon be (vagy nyomjon Entert az alapértelmezett értékhez)!");
+            }
+        }
+    }
+
+    private Boolean olvasIgenNem(String uzenet) {
+        while (true) {
+            System.out.print(uzenet);
+            if (!scanner.hasNextLine()) {
+                return null;
+            }
+            String sor = scanner.nextLine().trim().toLowerCase();
+            if (sor.equals("i") || sor.equals("igen")) {
+                return true;
+            }
+            if (sor.equals("n") || sor.equals("nem")) {
+                return false;
+            }
+            System.out.println("Hiba: kérem 'i' (igen) vagy 'n' (nem) választ adjon meg!");
         }
     }
 
