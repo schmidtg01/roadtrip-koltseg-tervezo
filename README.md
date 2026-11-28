@@ -185,7 +185,7 @@ A kliens kód (`TuraKezeloService` és `KonzolMenu`) független marad a konkrét
 
 ## 7. UML osztálydiagram
 
-A részletes rendszerterv és a felhasználói történetek (`US-01` – `US-06`) a [docs/uml-diagram.md](docs/uml-diagram.md) dokumentumban is megtalálhatók.
+A részletes rendszerterv és a felhasználói történetek (`US-01` – `US-06`) a [docs/uml-diagram.md](docs/uml-diagram.md) dokumentumban, az osztálydiagram szerkeszthető PlantUML forrása pedig a [docs/uml-diagram.puml](docs/uml-diagram.puml) fájlban érhető el.
 
 ```mermaid
 classDiagram

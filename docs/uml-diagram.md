@@ -14,6 +14,8 @@ Az **Autós Túra- és Költségmegosztó Tervező** egy magyar nyelvű konzolos
 
 ## UML Osztálydiagram
 
+> A diagram szerkeszthető PlantUML forrásfájlként is elérhető itt: [uml-diagram.puml](uml-diagram.puml).
+
 ```mermaid
 classDiagram
     direction TB

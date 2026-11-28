@@ -1,0 +1,201 @@
+@startuml roadtrip-class-diagram
+title Autós Túra- és Költségmegosztó Tervező – UML Osztálydiagram
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+
+package "java.lang" {
+    interface "Comparable<UtvonalSzakasz>" as ComparableUtvonalSzakasz {
+        + compareTo(masik: UtvonalSzakasz): int
+    }
+}
+
+package "hu.pte.mik.roadtrip.domain" {
+    abstract class UtvonalSzakasz {
+        - nev: String
+        - tavolsagKm: double
+        - alapFogyasztas: double
+        - uzemanyagAr: double
+        # UtvonalSzakasz(nev: String, tavolsagKm: double, alapFogyasztas: double, uzemanyagAr: double)
+        # alapUzemanyagKoltseg(): double
+        + {abstract} szamoltKoltseg(): double
+        + {abstract} becsultMenetidoOra(): double
+        + {abstract} getSzakaszTipus(): String
+        + getNev(): String
+        + getTavolsagKm(): double
+        + getAlapFogyasztas(): double
+        + getUzemanyagAr(): double
+        + compareTo(masik: UtvonalSzakasz): int
+    }
+
+    class AutopalyaSzakasz {
+        - {static} FOGYASZTASI_SZORZO: double
+        - matricaDij: double
+        - atlagSebesseg: double
+        + AutopalyaSzakasz(nev: String, tavolsagKm: double, alapFogyasztas: double, uzemanyagAr: double, matricaDij: double, atlagSebesseg: double)
+        + getMatricaDij(): double
+        + getAtlagSebesseg(): double
+        + szamoltKoltseg(): double
+        + becsultMenetidoOra(): double
+        + getSzakaszTipus(): String
+    }
+
+    class HegyiHagoSzakasz {
+        - {static} FOGYASZTAS_FELAR_100M_ENKENT: double
+        - {static} ALAP_HEGYI_SEBESSEG_KMH: double
+        - {static} MIN_HEGYI_SEBESSEG_KMH: double
+        - szintEmelkedesMeter: int
+        - hajtukanyarokSzama: int
+        + HegyiHagoSzakasz(nev: String, tavolsagKm: double, alapFogyasztas: double, uzemanyagAr: double, szintEmelkedesMeter: int, hajtukanyarokSzama: int)
+        + getSzintEmelkedesMeter(): int
+        + getHajtukanyarokSzama(): int
+        + getBecsultAtlagSebessegKmh(): double
+        + szamoltKoltseg(): double
+        + becsultMenetidoOra(): double
+        + getSzakaszTipus(): String
+    }
+
+    class VarosiSzakasz {
+        - {static} ALAP_VAROSI_SEBESSEG_KMH: double
+        - parkolasiDij: double
+        - dugoFaktor: double
+        + VarosiSzakasz(nev: String, tavolsagKm: double, alapFogyasztas: double, uzemanyagAr: double, parkolasiDij: double, dugoFaktor: double)
+        + getParkolasiDij(): double
+        + getDugoFaktor(): double
+        + szamoltKoltseg(): double
+        + becsultMenetidoOra(): double
+        + getSzakaszTipus(): String
+    }
+
+    class Utas {
+        - nev: String
+        - megtettKm: double
+        + Utas(nev: String, megtettKm: double)
+        + Utas(nev: String)
+        + getNev(): String
+        + getMegtettKm(): double
+        + setMegtettKm(megtettKm: double): void
+    }
+
+    class TuraTerv {
+        - turaNev: String
+        - jarmuNev: String
+        - ferohelyekSzama: int
+        - alapFogyasztas: double
+        - uzemanyagAr: double
+        - szakaszok: List<UtvonalSzakasz>
+        - utasok: List<Utas>
+        + TuraTerv(turaNev: String, jarmuNev: String, ferohelyekSzama: int, alapFogyasztas: double, uzemanyagAr: double)
+        + szakaszHozzaadasa(szakasz: UtvonalSzakasz): void
+        + szakaszEltavolitasa(szakasz: UtvonalSzakasz): boolean
+        + utasHozzaadasa(utas: Utas): void
+        + utasEltavolitasa(utas: Utas): boolean
+        + getSzakaszok(): List<UtvonalSzakasz>
+        + getUtasok(): List<Utas>
+        + getSzabadFerohelyekSzama(): int
+        + osszesTavolsagKm(): double
+        + osszesKoltseg(): double
+        + osszesMenetidoOra(): double
+        + getSzakaszokTavolsagSzerintRendezve(): List<UtvonalSzakasz>
+    }
+}
+
+package "hu.pte.mik.roadtrip.service" {
+    interface KoltsegOsztasiStrategia {
+        + elosztKoltseg(tura: TuraTerv): Map<Utas, Double>
+        + getNev(): String
+    }
+
+    class EgyenloElosztasStrategia {
+        + elosztKoltseg(tura: TuraTerv): Map<Utas, Double>
+        + getNev(): String
+    }
+
+    class TavolsagAranyosStrategia {
+        + elosztKoltseg(tura: TuraTerv): Map<Utas, Double>
+        + getNev(): String
+    }
+
+    class TuraKezeloService {
+        - strategia: KoltsegOsztasiStrategia
+        + TuraKezeloService()
+        + TuraKezeloService(kezdetiStrategia: KoltsegOsztasiStrategia)
+        + getStrategia(): KoltsegOsztasiStrategia
+        + setStrategia(strategia: KoltsegOsztasiStrategia): void
+        + koltsegElszamolas(tura: TuraTerv): Map<Utas, Double>
+        + rendezSzakaszokKoltsegSzerint(tura: TuraTerv): List<UtvonalSzakasz>
+        + rendezSzakaszokMenetidoSzerint(tura: TuraTerv): List<UtvonalSzakasz>
+        + rendezSzakaszokTavolsagSzerint(tura: TuraTerv): List<UtvonalSzakasz>
+    }
+}
+
+package "hu.pte.mik.roadtrip.persistence" {
+    class JsonTuraTarolo {
+        - objectMapper: ObjectMapper
+        + JsonTuraTarolo()
+        + JsonTuraTarolo(objectMapper: ObjectMapper)
+        + ment(turak: List<TuraTerv>, fajlUtvonal: Path): void
+        + betolt(fajlUtvonal: Path): List<TuraTerv>
+        + betoltVagyUres(fajlUtvonal: Path): List<TuraTerv>
+    }
+}
+
+package "hu.pte.mik.roadtrip.ui" {
+    class KonzolMenu {
+        - turaKezeloService: TuraKezeloService
+        - turaTarolo: JsonTuraTarolo
+        - adatFajlUtvonal: Path
+        - scanner: Scanner
+        - turak: List<TuraTerv>
+        - aktivTuraIndex: int
+        + KonzolMenu(service: TuraKezeloService, tarolo: JsonTuraTarolo, adatFajl: Path)
+        + indit(): void
+    }
+}
+
+package "hu.pte.mik.roadtrip" {
+    class Main {
+        - {static} ALAPERTELMEZETT_ADATFAJL: String
+        + {static} main(args: String[]): void
+    }
+}
+
+package "hu.pte.mik.roadtrip.exception" {
+    exception ErvenytelenAdatException <<RuntimeException>>
+    exception TulTerheltJarmuException <<Exception>>
+    exception AdatMentesException <<Exception>>
+}
+
+' Öröklődés és interfész megvalósítás
+ComparableUtvonalSzakasz <|.. UtvonalSzakasz
+UtvonalSzakasz <|-- AutopalyaSzakasz
+UtvonalSzakasz <|-- HegyiHagoSzakasz
+UtvonalSzakasz <|-- VarosiSzakasz
+
+KoltsegOsztasiStrategia <|.. EgyenloElosztasStrategia
+KoltsegOsztasiStrategia <|.. TavolsagAranyosStrategia
+
+' Kompozíció, aggregáció és asszociációk
+TuraTerv "1" *-- "0..*" UtvonalSzakasz : tartalmaz
+TuraTerv "1" o-- "0..*" Utas : résztvevők
+
+TuraKezeloService "1" --> "1" KoltsegOsztasiStrategia : aktuális stratégia
+TuraKezeloService ..> TuraTerv : elszámol és rendez
+
+JsonTuraTarolo ..> TuraTerv : szerializál / deszerializál
+JsonTuraTarolo ..> AdatMentesException : dob
+
+KonzolMenu "1" --> "1" TuraKezeloService : használ
+KonzolMenu "1" --> "1" JsonTuraTarolo : használ
+KonzolMenu "1" o-- "0..*" TuraTerv : kezel
+Main ..> KonzolMenu : létrehoz és indít
+
+' Kivétel függőségek
+TuraTerv ..> TulTerheltJarmuException : dob
+TuraTerv ..> ErvenytelenAdatException : dob
+UtvonalSzakasz ..> ErvenytelenAdatException : dob
+KoltsegOsztasiStrategia ..> ErvenytelenAdatException : dob
+
+@enduml
