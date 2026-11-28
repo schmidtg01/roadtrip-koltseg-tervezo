@@ -59,6 +59,12 @@ public class VarosiSzakasz extends UtvonalSzakasz {
     }
 
     @Override
+    @JsonIgnore
+    public double extraDijKoltseg() {
+        return parkolasiDij;
+    }
+
+    @Override
     public double becsultMenetidoOra() {
         return (getTavolsagKm() / ALAP_VAROSI_SEBESSEG_KMH) * dugoFaktor;
     }

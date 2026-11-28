@@ -57,6 +57,12 @@ public class AutopalyaSzakasz extends UtvonalSzakasz {
     }
 
     @Override
+    @JsonIgnore
+    public double extraDijKoltseg() {
+        return matricaDij;
+    }
+
+    @Override
     public double becsultMenetidoOra() {
         return getTavolsagKm() / atlagSebesseg;
     }
